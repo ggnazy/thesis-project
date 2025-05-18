@@ -1,0 +1,16 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+
+# TLS certificates and keys
+*.key
+*.csr
+*.srl
+
+# Logs
+logs/vpn_log.txt
+
+# Environment
+.env
