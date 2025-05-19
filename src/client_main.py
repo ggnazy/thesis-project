@@ -22,7 +22,7 @@ class VPNClient:
         self.logger = logging.getLogger(__name__)
         
         # Use same test key as server
-        test_key = b'Fv6/aFq6E4+pcMDMnPmOaDb1EAKqRIpf5L1obNry05Q='
+        test_key = b'0XvWRTQJhNvz92USNoD+E/1a0B9Pij32SlOay0iQiSI='
         self.crypto = CryptoUtils(base64.b64decode(test_key))
         
         # SSL context setup with proper verification
