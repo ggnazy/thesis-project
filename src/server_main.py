@@ -1,12 +1,17 @@
 import socket
 import ssl
 import logging
+import sys
 from crypto_utils import CryptoUtils
 
+# Configure logging to both file and console
 logging.basicConfig(
-    filename='logs/vpn_log.txt',
     level=logging.DEBUG,
-    format='%(asctime)s - %(levelname)s - %(message)s'
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler('logs/vpn_log.txt'),
+        logging.StreamHandler(sys.stdout)
+    ]
 )
 
 class VPNServer:
@@ -16,13 +21,17 @@ class VPNServer:
         self.crypto = CryptoUtils()
         self.logger = logging.getLogger(__name__)
         
-        # SSL context setup
-        self.context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
-        self.context.load_cert_chain(
-            certfile='tls_config/server.crt',
-            keyfile='tls_config/server.key'
-        )
-        self.logger.debug("SSL Context initialized")
+        try:
+            # SSL context setup
+            self.context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
+            self.context.load_cert_chain(
+                certfile='tls_config/server.crt',
+                keyfile='tls_config/server.key'
+            )
+            self.logger.info("SSL Context initialized successfully")
+        except Exception as e:
+            self.logger.error(f"Failed to initialize SSL context: {e}")
+            raise
         
     def start(self):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
