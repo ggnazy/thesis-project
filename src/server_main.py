@@ -2,11 +2,10 @@ import socket
 import ssl
 import logging
 from crypto_utils import CryptoUtils
-from datetime import datetime
 
 logging.basicConfig(
     filename='logs/vpn_log.txt',
-    level=logging.INFO,
+    level=logging.DEBUG,
     format='%(asctime)s - %(levelname)s - %(message)s'
 )
 
@@ -15,6 +14,7 @@ class VPNServer:
         self.host = host
         self.port = port
         self.crypto = CryptoUtils()
+        self.logger = logging.getLogger(__name__)
         
         # SSL context setup
         self.context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
@@ -22,44 +22,46 @@ class VPNServer:
             certfile='tls_config/server.crt',
             keyfile='tls_config/server.key'
         )
+        self.logger.debug("SSL Context initialized")
         
     def start(self):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+            sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             sock.bind((self.host, self.port))
             sock.listen(5)
-            logging.info(f"Server started on {self.host}:{self.port}")
+            self.logger.info(f"Server listening on {self.host}:{self.port}")
             
             with self.context.wrap_socket(sock, server_side=True) as ssock:
                 while True:
                     try:
                         client_socket, addr = ssock.accept()
-                        logging.info(f"Connection from {addr}")
+                        self.logger.info(f"Connection from {addr}")
                         self.handle_client(client_socket)
                     except Exception as e:
-                        logging.error(f"Error handling client: {e}")
+                        self.logger.error(f"Error handling client: {e}")
 
     def handle_client(self, client_socket):
         try:
             with client_socket:
-                while True:
-                    data = client_socket.recv(4096)
-                    if not data:
-                        break
-                        
-                    ciphertext = data[:-48]
-                    signature = data[-48:-16]
-                    iv = data[-16:]
+                data = client_socket.recv(4096)
+                if not data:
+                    return
                     
-                    try:
-                        message = self.crypto.decrypt(ciphertext, signature, iv)
-                        logging.info(f"Received message: {message.decode()}")
-                        client_socket.send(b"Message received")
-                    except Exception as e:
-                        logging.error(f"Decryption error: {e}")
-                        client_socket.send(b"Error processing message")
+                # Extract components
+                ciphertext = data[:-48]  # Last 48 bytes are signature(32) + iv(16)
+                signature = data[-48:-16]
+                iv = data[-16:]
+                
+                try:
+                    message = self.crypto.decrypt(ciphertext, signature, iv)
+                    self.logger.info(f"Received message: {message.decode()}")
+                    client_socket.send(b"Message received successfully")
+                except Exception as e:
+                    self.logger.error(f"Decryption error: {e}")
+                    client_socket.send(b"Error processing message")
                         
         except Exception as e:
-            logging.error(f"Connection error: {e}")
+            self.logger.error(f"Connection error: {e}")
 
 if __name__ == "__main__":
     server = VPNServer()
