@@ -18,54 +18,57 @@ def generate_certificates():
     # Create tls_config directory
     Path("tls_config").mkdir(exist_ok=True)
     
-    # Generate CA key and certificate
-    print("Generating CA key and certificate...")
-    run_command("openssl genrsa -out tls_config/ca.key 4096")
+    # Generate CA key and certificate with proper extensions
     run_command("""
-        openssl req -x509 -new -nodes \
-        -key tls_config/ca.key \
-        -sha256 -days 365 \
+    openssl req -x509 -new -nodes \
+        -keyout tls_config/ca.key \
+        -out tls_config/ca.crt \
+        -days 365 \
         -subj "/C=US/ST=State/L=City/O=Organization/CN=VPN-CA" \
-        -out tls_config/ca.crt
+        -extensions v3_ca \
+        -config <(echo "
+            [ v3_ca ]
+            basicConstraints=critical,CA:TRUE
+            keyUsage=critical,digitalSignature,keyCertSign,cRLSign
+            subjectKeyIdentifier=hash
+        ")
     """)
 
-    # Generate server key and CSR
-    print("Generating server key and CSR...")
+    # Generate server key
     run_command("openssl genrsa -out tls_config/server.key 4096")
+
+    # Generate server CSR
     run_command("""
-        openssl req -new \
+    openssl req -new \
         -key tls_config/server.key \
-        -subj "/C=US/ST=State/L=City/O=Organization/CN=localhost" \
-        -out tls_config/server.csr
+        -out tls_config/server.csr \
+        -subj "/C=US/ST=State/L=City/O=Organization/CN=192.168.100.10"
     """)
 
     # Sign server certificate
-    print("Signing server certificate with CA...")
     run_command("""
-        openssl x509 -req \
+    openssl x509 -req \
         -in tls_config/server.csr \
         -CA tls_config/ca.crt \
         -CAkey tls_config/ca.key \
         -CAcreateserial \
         -out tls_config/server.crt \
         -days 365 \
-        -sha256
+        -extensions v3_req \
+        -extfile <(echo "
+            [ v3_req ]
+            basicConstraints=CA:FALSE
+            keyUsage=critical,digitalSignature,keyEncipherment
+            extendedKeyUsage=serverAuth
+            subjectAltName=IP:192.168.100.10
+        ")
     """)
 
     # Set proper permissions
-    print("Setting proper permissions...")
     run_command("chmod 600 tls_config/*.key")
+    run_command("chmod 644 tls_config/*.crt")
     
-    # Clean up CSR file
-    print("Cleaning up...")
-    run_command("rm tls_config/server.csr")
-    
-    print("\nCertificates generated successfully!")
-    print("\nGenerated files:")
-    print("- tls_config/ca.key (CA private key)")
-    print("- tls_config/ca.crt (CA certificate)")
-    print("- tls_config/server.key (Server private key)")
-    print("- tls_config/server.crt (Server certificate)")
+    print("Certificates generated successfully!")
 
 if __name__ == "__main__":
     generate_certificates()
