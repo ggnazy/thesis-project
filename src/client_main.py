@@ -21,16 +21,17 @@ class VPNClient:
         )
         self.logger = logging.getLogger(__name__)
         
-        # Use same test key as server
-        test_key = b'0XvWRTQJhNvz92USNoD+E/1a0B9Pij32SlOay0iQiSI='
-        self.crypto = CryptoUtils(base64.b64decode(test_key))
-        
         # SSL context setup with proper verification
         self.context = ssl.create_default_context(ssl.Purpose.SERVER_AUTH)
         self.context.load_verify_locations(cafile='tls_config/ca.crt')
         self.context.verify_mode = ssl.CERT_REQUIRED
-        self.context.check_hostname = False
-        self.logger.debug("SSL Context initialized")
+        self.context.check_hostname = False  # Since we're using IP address
+        
+        # Use same test key as shown in server output
+        test_key = b'0XvWRTQJhNvz92USNoD+E/1a0B9Pij32SlOay0iQiSI='
+        self.crypto = CryptoUtils(base64.b64decode(test_key))
+        
+        self.logger.debug("SSL Context initialized with CA certificate")
     
     def connect(self):
         try:
