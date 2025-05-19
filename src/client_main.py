@@ -1,16 +1,25 @@
 import socket
 import ssl
 from crypto_utils import CryptoUtils
+import base64
+import logging
 
 class VPNClient:
-    def __init__(self, host='localhost', port=4433):
+    def __init__(self, host='192.168.100.10', port=4433):
         self.host = host
         self.port = port
-        self.crypto = CryptoUtils()
+        # Use same test key as server
+        test_key = b'...' # Copy base64 key printed by server
+        self.crypto = CryptoUtils(base64.b64decode(test_key))
+        
+        # Add debug logging
+        logging.basicConfig(level=logging.DEBUG)
+        self.logger = logging.getLogger(__name__)
         
         # SSL context setup
         self.context = ssl.create_default_context(ssl.Purpose.SERVER_AUTH)
         self.context.load_verify_locations('tls_config/ca.crt')
+        self.logger.debug("SSL Context initialized")
         
     def connect(self):
         sock = socket.create_connection((self.host, self.port))

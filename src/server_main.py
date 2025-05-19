@@ -2,6 +2,8 @@ import socket
 import ssl
 import logging
 import sys
+import os
+import base64
 from crypto_utils import CryptoUtils
 
 # Configure logging to both file and console
@@ -18,7 +20,11 @@ class VPNServer:
     def __init__(self, host='0.0.0.0', port=4433):
         self.host = host
         self.port = port
-        self.crypto = CryptoUtils()
+        # Create crypto with fixed key for testing
+        test_key = os.urandom(32)
+        self.crypto = CryptoUtils(test_key)
+        print(f"Using test key: {base64.b64encode(test_key).decode()}")
+        
         self.logger = logging.getLogger(__name__)
         
         try:
