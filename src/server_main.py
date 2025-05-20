@@ -6,7 +6,6 @@ import os
 import base64
 from crypto_utils import CryptoUtils
 
-# Configure logging to both file and console
 logging.basicConfig(
     level=logging.DEBUG,
     format='%(asctime)s - %(levelname)s - %(message)s',
@@ -20,7 +19,6 @@ class VPNServer:
     def __init__(self, host='0.0.0.0', port=4433):
         self.host = host
         self.port = port
-        # Create crypto with fixed key for testing
         test_key = os.urandom(32)
         self.crypto = CryptoUtils(test_key)
         print(f"Using test key: {base64.b64encode(test_key).decode()}")
@@ -28,7 +26,6 @@ class VPNServer:
         self.logger = logging.getLogger(__name__)
         
         try:
-            # SSL context setup
             self.context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
             self.context.load_cert_chain(
                 certfile='tls_config/server.crt',
@@ -62,7 +59,6 @@ class VPNServer:
                 if not data:
                     return
                     
-                # Extract components
                 ciphertext = data[:-48]  # Last 48 bytes are signature(32) + iv(16)
                 signature = data[-48:-16]
                 iv = data[-16:]
