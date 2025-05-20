@@ -77,11 +77,3 @@ class VPNServer:
 if __name__ == "__main__":
     server = VPNServer()
     server.start()
-
-
-
-data = client_socket.recv(4096)
-ciphertext = data[:-48]
-signature = data[-48:-16]
-iv = data[-16:]
-message = self.crypto.decrypt(ciphertext, signature, iv)
