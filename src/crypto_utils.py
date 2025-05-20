@@ -7,7 +7,6 @@ import base64
 
 class CryptoUtils:
     def __init__(self, key=None):
-        # Use same key for testing
         self.key = key if key else os.urandom(32)
         
     def get_key(self):
