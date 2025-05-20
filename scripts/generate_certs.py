@@ -16,10 +16,8 @@ def generate_certificates():
     """Generate all required certificates for VPN"""
     print("Starting certificate generation...")
     
-    # Create tls_config directory
     Path("tls_config").mkdir(exist_ok=True)
 
-    # Create CA config file
     ca_config = """
 [req]
 distinguished_name = req_distinguished_name
@@ -38,7 +36,6 @@ basicConstraints = critical,CA:TRUE
 keyUsage = critical,digitalSignature,keyCertSign,cRLSign
 subjectKeyIdentifier = hash
 """
-    # Create server config
     server_config = """
 [req]
 distinguished_name = req_distinguished_name
@@ -59,7 +56,6 @@ extendedKeyUsage = serverAuth
 subjectAltName = IP:192.168.100.10
 """
     
-    # Write configs to temporary files
     with tempfile.NamedTemporaryFile(mode='w', delete=False) as ca_file:
         ca_file.write(ca_config)
         ca_config_path = ca_file.name
@@ -69,27 +65,22 @@ subjectAltName = IP:192.168.100.10
         server_config_path = server_file.name
 
     try:
-        # Generate CA key and certificate
         run_command(f"openssl req -x509 -new -nodes -keyout tls_config/ca.key -out tls_config/ca.crt -days 365 -config {ca_config_path}")
 
-        # Generate server key
         run_command("openssl genrsa -out tls_config/server.key 4096")
 
-        # Generate server CSR and certificate
         run_command(f"openssl req -new -key tls_config/server.key -out tls_config/server.csr -config {server_config_path}")
         run_command(f"""
             openssl x509 -req -in tls_config/server.csr -CA tls_config/ca.crt -CAkey tls_config/ca.key \
             -CAcreateserial -out tls_config/server.crt -days 365 -extfile {server_config_path} -extensions v3_req
         """)
 
-        # Set proper permissions
         run_command("chmod 600 tls_config/*.key")
         run_command("chmod 644 tls_config/*.crt")
         
         print("Certificates generated successfully!")
 
     finally:
-        # Clean up temporary files
         os.unlink(ca_config_path)
         os.unlink(server_config_path)
 
