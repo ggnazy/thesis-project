@@ -59,7 +59,7 @@ class VPNServer:
                 if not data:
                     return
                     
-                ciphertext = data[:-48]  # Last 48 bytes are signature(32) + iv(16)
+                ciphertext = data[:-48]  
                 signature = data[-48:-16]
                 iv = data[-16:]
                 
