@@ -23,7 +23,7 @@ class VPNClient:
         self.context = ssl.create_default_context(ssl.Purpose.SERVER_AUTH)
         self.context.load_verify_locations(cafile='tls_config/ca.crt')
         self.context.verify_mode = ssl.CERT_REQUIRED
-        self.context.check_hostname = False  # Since we're using IP address
+        self.context.check_hostname = False  
         
         test_key = b'0XvWRTQJhNvz92USNoD+E/1a0B9Pij32SlOay0iQiSI='
         self.crypto = CryptoUtils(base64.b64decode(test_key))
